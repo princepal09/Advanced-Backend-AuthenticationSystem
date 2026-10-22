@@ -3,8 +3,9 @@ import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { env } from "./config/env.config.js";
+import { globalErrorHandler } from "./middlewares/error.middleware.js";
 import { AppError } from "./utils/common/error/AppError.js";
-
+import authRouter from "./modules/auth/auth.route.js";
 export const app = express();
 
 // app.set("trust proxy", 1);
@@ -28,10 +29,10 @@ app.get("/health-check", (_req: Request, res: Response) => {
   });
 });
 
-
+app.use("/api/v1/auth", authRouter);
 
 app.use((req, _res, next) => {
   next(new AppError(`Cannot find ${req.originalUrl} on this server`, 404));
 });
 
-// app.use(globalErrorHandler);
+app.use(globalErrorHandler);

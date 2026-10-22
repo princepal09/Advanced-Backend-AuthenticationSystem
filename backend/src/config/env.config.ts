@@ -20,14 +20,6 @@ const envSchema = z.object({
     .min(8, "Admin password must be at least 8 characters long"),
   REDIS_URL: z.string(),
   REDIS_PORT: z.coerce.number(),
-  GOOGLE_CLIENT_ID: z.string(),
-  GOOGLE_CLIENT_SECRET: z.string(),
-  GOOGLE_REDIRECT_URI: z.string(),
-  CLOUDFLARE_TURNSTILE_SITE_KEY: z.string(),
-  CLOUDFLARE_TURNSTILE_SECRET_KEY: z.string(),
-  CLOUDFLARE_TURNSTILE_TOKEN_VERIFICATION_URL: z
-    .url()
-    .default("https://challenges.cloudflare.com/turnstile/v0/siteverify"),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

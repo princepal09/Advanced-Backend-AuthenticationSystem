@@ -1,7 +1,7 @@
-
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider     = "prisma-client"
+  moduleFormat = "esm"
+  output       = "../generated/prisma-client"
 }
 
 datasource db {
@@ -14,27 +14,15 @@ enum AuthProvider {
 }
 
 model User {
-  id              String        @id @default(uuid())
-  email           String        @unique
+  id              String       @id @default(uuid())
+  email           String       @unique
   passwordHash    String?
-  isEmailVerified Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  isEmailVerified Boolean      @default(false)
+  provider        AuthProvider @default(EMAIL)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
   sessions        Session[]
   userRoles       UserRole[]
-  authAccounts    AuthAccount[]
-}
-
-model AuthAccount {
-  id                String       @id @default(uuid())
-  userId            String
-  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider          AuthProvider
-  providerAccountId String
-  createdAt         DateTime     @default(now())
-
-  @@unique([provider, providerAccountId])
-  @@index([userId])
 }
 
 model Session {
@@ -44,8 +32,6 @@ model Session {
   refreshTokenHash String
   userAgent        String?
   ipAddress        String?
-  isRevoked        Boolean   @default(false)
-  isDeleted        Boolean   @default(false)
   expiresAt        DateTime
   revokedAt        DateTime?
   createdAt        DateTime  @default(now())
@@ -56,13 +42,11 @@ model Session {
 }
 
 model Role {
-  id              String           @id @default(uuid())
-  name            String           @unique
-  isDeleted       Boolean          @default(false)
-  isSystem        Boolean          @default(false)
-  deletedAt       DateTime?
-  createdAt       DateTime         @default(now())
+  id   String @id @default(uuid())
+  name String @unique
+
   userRoles       UserRole[]
+  createdAt       DateTime         @default(now())
   rolePermissions RolePermission[]
 }
 
@@ -74,15 +58,14 @@ model Permission {
 }
 
 model UserRole {
-  userId     String
-  roleId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  userId String
+  roleId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
   assignedAt DateTime @default(now())
 
   @@id([userId, roleId])
-  @@index([userId])
-  @@index([roleId])
 }
 
 model RolePermission {
@@ -93,6 +76,4 @@ model RolePermission {
   assignedAt   DateTime   @default(now())
 
   @@id([roleId, permissionId])
-  @@index([roleId])
-  @@index([permissionId])
 }
