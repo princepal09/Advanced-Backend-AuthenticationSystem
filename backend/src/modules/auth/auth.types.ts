@@ -20,7 +20,7 @@ export type findUserByIdType = {
 };
 
 export type createSessionType = {
-  id: string;
+  id:string
   userId: string;
   refreshTokenHash: string;
   userAgent?: string;
