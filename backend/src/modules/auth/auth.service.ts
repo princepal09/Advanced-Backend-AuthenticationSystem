@@ -3,7 +3,11 @@ import {
   generateSessionId,
   hashRefreshToken,
 } from "../../utils/auth/auth.helper.js";
-import { signAccessToken } from "../../utils/auth/jwt.js";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from "../../utils/auth/jwt.js";
 import { comparePassword, hashPassword } from "../../utils/auth/password.js";
 import { AppError } from "../../utils/common/error/AppError.js";
 import { IAuthRepository } from "./auth.interface.js";
@@ -68,7 +72,7 @@ export class AuthService {
       sub: existingUser.id,
       sessionId,
     });
-    const refreshToken = signAccessToken({
+    const refreshToken = signRefreshToken({
       sub: existingUser.id,
       sessionId,
     });
@@ -95,14 +99,75 @@ export class AuthService {
     };
   }
 
-
-  async getLoggedInUser(data:userType){
+  async getLoggedInUser(data: userType) {
     const user = await this.authRepo.findUserById(data.userId);
-    if(!user){
-      throw new AppError("User not found", 404)
+    if (!user) {
+      throw new AppError("User not found", 404);
     }
 
     return user;
   }
 
+  async refreshSession(refreshToken: string) {
+    const payload = verifyRefreshToken(refreshToken);
+    console.log(payload)
+
+    const session = await this.authRepo.findSessionById(payload.sessionId);
+
+    if (!session) {
+      throw new AppError("Session not found", 401);
+    }
+
+    if (session?.isRevoked) {
+      throw new AppError("Session has been revoked", 401);
+    }
+
+    if (session?.expiresAt < new Date()) {
+      throw new AppError("Session has expired", 401);
+    }
+
+    const incomingRefreshTokenHash = hashRefreshToken(refreshToken);
+
+    const isIncomingRefreshTokenValid =
+      incomingRefreshTokenHash === session.refreshTokenHash;
+
+    if (!isIncomingRefreshTokenValid) {
+      await this.authRepo.revokeAllSessions(session.userId);
+      throw new AppError("Refresh Token reuse detected", 401);
+    }
+
+    const newAccessToken = signAccessToken({
+      sub: session.userId,
+      sessionId: session.id,
+    });
+
+    const newRefreshToken = signRefreshToken({
+      sub: session.userId,
+      sessionId: session.id,
+    });
+
+    const hashedNewRefreshToken = hashRefreshToken(newRefreshToken);
+
+    const newRefreshTokenExpiresIn = ms(
+      env.REFRESH_TOKEN_EXPIRES_IN as ms.StringValue,
+    );
+
+    if (typeof newRefreshTokenExpiresIn !== "number") {
+      throw new Error("Invalid Refresh token expiry configuration");
+    }
+
+    const newRefreshTokenExpiresAt = new Date(
+      Date.now() + newRefreshTokenExpiresIn,
+    );
+
+    const updatedSession = await this.authRepo.updateSession(session.id, {
+      hashedNewRefreshToken,
+      newRefreshTokenExpiresAt,
+    });
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    };
+  }
 }

@@ -5,6 +5,7 @@ import {
   createSessionType,
   createUserType,
   findUserByIdType,
+  updateSessionType,
 } from "./auth.types.js";
 
 export class AuthRepository implements IAuthRepository {
@@ -22,17 +23,27 @@ export class AuthRepository implements IAuthRepository {
       where: {
         id: userId,
       },
-      select:{
-        id:true,
-        email:true,
-        createdAt:true
-      }
+      select: {
+        id: true,
+        email: true,
+        createdAt: true,
+      },
     });
 
     return user;
   }
 
-  async createUser(data: createUserType): Promise<User > {
+  async findSessionById(sessionId: string): Promise<Session | null> {
+    const session = await prisma.session.findUnique({
+      where: {
+        id: sessionId,
+      },
+    });
+
+    return session;
+  }
+
+  async createUser(data: createUserType): Promise<User> {
     const user = await prisma.user.create({
       data: {
         email: data.email,
@@ -47,5 +58,33 @@ export class AuthRepository implements IAuthRepository {
       data,
     });
     return session;
+  }
+
+  async revokeAllSessions(userId: string): Promise<void> {
+    await prisma.session.updateMany({
+      where: {
+        userId,
+      },
+      data: {
+        isRevoked: true,
+      },
+    });
+  }
+
+  async updateSession(
+    sessionId: string,
+    data: updateSessionType,
+  ): Promise<Session> {
+    const updatedSession = await prisma.session.update({
+      where: {
+        id: sessionId,
+      },
+      data: {
+        refreshTokenHash: data.hashedNewRefreshToken,
+        expiresAt: data.newRefreshTokenExpiresAt,
+      },
+    });
+
+    return updatedSession;
   }
 }

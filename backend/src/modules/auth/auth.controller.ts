@@ -3,7 +3,6 @@ import { catchAsync } from "../../utils/common/helpers/CatchAsync.js";
 import { AuthService } from "./auth.service.js";
 import { sendResponse } from "../../utils/response/AppResponse.js";
 import { setCookies } from "../../utils/auth/auth.helper.js";
-import { userType } from "./auth.types.js";
 import { AppError } from "../../utils/common/error/AppError.js";
 
 export class AuthController {
@@ -70,6 +69,26 @@ export class AuthController {
       success: true,
       message: "User fetched Successfully",
       data: result,
+    });
+  });
+
+  refreshTokenController = catchAsync(async (req: Request, res: Response) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      throw new AppError("Refresh Token is missing", 401);
+    }
+
+    const result = await this.authService.refreshSession(refreshToken);
+
+    setCookies(res, result.refreshToken);
+
+    sendResponse(res, 200, {
+      success: true,
+      message: "Token Token Rotated Successfully",
+      data: {
+        accessToken: result.accessToken,
+      },
     });
   });
 }

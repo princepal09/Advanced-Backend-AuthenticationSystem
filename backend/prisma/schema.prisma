@@ -32,6 +32,7 @@ model Session {
   refreshTokenHash String
   userAgent        String?
   ipAddress        String?
+  isRevoked        Boolean @default(false)
   expiresAt        DateTime
   revokedAt        DateTime?
   createdAt        DateTime  @default(now())

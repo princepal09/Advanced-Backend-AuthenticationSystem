@@ -19,4 +19,7 @@ router.post(
 );
 
 router.get("/me", authMiddleware, authController.loggedInUserController);
+
+router.post("/refresh-token", authController.refreshTokenController);
+
 export default router;
