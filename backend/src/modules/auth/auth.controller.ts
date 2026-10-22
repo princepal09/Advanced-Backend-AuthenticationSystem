@@ -3,6 +3,8 @@ import { catchAsync } from "../../utils/common/helpers/CatchAsync.js";
 import { AuthService } from "./auth.service.js";
 import { sendResponse } from "../../utils/response/AppResponse.js";
 import { setCookies } from "../../utils/auth/auth.helper.js";
+import { userType } from "./auth.types.js";
+import { AppError } from "../../utils/common/error/AppError.js";
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -52,6 +54,22 @@ export class AuthController {
         user: result.user,
         accessToken: result.accessToken,
       },
+    });
+  });
+
+  loggedInUserController = catchAsync(async (req: Request, res: Response) => {
+    const user = req.user;
+
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
+    const result = await this.authService.getLoggedInUser(user);
+
+    sendResponse(res, 200, {
+      success: true,
+      message: "User fetched Successfully",
+      data: result,
     });
   });
 }

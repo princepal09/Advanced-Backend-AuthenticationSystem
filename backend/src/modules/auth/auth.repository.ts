@@ -1,7 +1,11 @@
 import type { Session, User } from "../../../generated/prisma-client/client.js";
 import { prisma } from "../../lib/prisma.js";
 import { IAuthRepository } from "./auth.interface.js";
-import { createSessionType, createUserType, findUserByIdType } from "./auth.types.js";
+import {
+  createSessionType,
+  createUserType,
+  findUserByIdType,
+} from "./auth.types.js";
 
 export class AuthRepository implements IAuthRepository {
   async findUserByEmail(email: string): Promise<User | null> {
@@ -13,12 +17,12 @@ export class AuthRepository implements IAuthRepository {
     return user;
   }
 
-  async findUserById(id: string): Promise<findUserByIdType | null> {
+  async findUserById(userId: string): Promise<findUserByIdType | null> {
     const user = await prisma.user.findUnique({
       where: {
-        id,
+        id: userId,
       },
-      select : {
+      select:{
         id:true,
         email:true,
         createdAt:true
@@ -28,7 +32,7 @@ export class AuthRepository implements IAuthRepository {
     return user;
   }
 
-  async createUser(data: createUserType): Promise<User> {
+  async createUser(data: createUserType): Promise<User > {
     const user = await prisma.user.create({
       data: {
         email: data.email,

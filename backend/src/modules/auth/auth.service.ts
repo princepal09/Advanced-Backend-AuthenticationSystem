@@ -9,6 +9,7 @@ import { AppError } from "../../utils/common/error/AppError.js";
 import { IAuthRepository } from "./auth.interface.js";
 import { sanitizedUserResponse } from "./auth.response.js";
 import { env } from "../../config/env.config.js";
+import { userType } from "./auth.types.js";
 
 export class AuthService {
   constructor(private authRepo: IAuthRepository) {}
@@ -93,4 +94,15 @@ export class AuthService {
       refreshToken,
     };
   }
+
+
+  async getLoggedInUser(data:userType){
+    const user = await this.authRepo.findUserById(data.userId);
+    if(!user){
+      throw new AppError("User not found", 404)
+    }
+
+    return user;
+  }
+
 }

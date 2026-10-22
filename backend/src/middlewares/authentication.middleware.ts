@@ -10,6 +10,7 @@ export const authMiddleware = (
 ) => {
   try {
     const authHeader = req.headers.authorization;
+    console.log(authHeader);
 
     if (!authHeader) {
       return next(new AppError("Authentication required", 401));
@@ -19,16 +20,23 @@ export const authMiddleware = (
       return next(new AppError("Invalid Authentication Format", 401));
     }
 
-    const accessToken = authHeader.split("")[1];
+    const accessToken = authHeader.split(" ")[1];
+    console.log("accessToken", accessToken);
     if (!accessToken) {
       return next(new AppError("Access Token missing", 401));
     }
 
     const payload = verifyAccessToken(accessToken) as JwtPayload;
 
+    console.log(payload)
+
+    if (!payload.sub || !payload.sessionId) {
+      return next(new AppError("Invalid token payload", 401));
+    }
+
     req.user = {
-      userId: payload.sub!,
-      sessionId: payload.sessionId!,
+      userId: payload.sub,
+      sessionId: payload.sessionId,
     };
 
     return next();
