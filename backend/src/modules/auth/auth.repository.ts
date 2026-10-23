@@ -87,4 +87,40 @@ export class AuthRepository implements IAuthRepository {
 
     return updatedSession;
   }
+
+  async findSessionByUserIdAndSessionId(
+    userId: string,
+    sessionId: string,
+  ): Promise<Session | null> {
+    const session = await prisma.session.findFirst({
+      where: {
+        id: sessionId,
+        userId,
+      },
+    });
+
+    return session;
+  }
+
+  async deleteSession(sessionId: string): Promise<void> {
+    await prisma.session.update({
+      where: {
+        id: sessionId,
+      },
+      data: {
+        isDeleted: true,
+      },
+    });
+  }
+
+  async deleteUserAllSessions(userId: string): Promise<void> {
+    await prisma.session.updateMany({
+      where: {
+        userId,
+      },
+      data: {
+        isDeleted: true,
+      },
+    });
+  }
 }

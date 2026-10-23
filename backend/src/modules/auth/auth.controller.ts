@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { catchAsync } from "../../utils/common/helpers/CatchAsync.js";
 import { AuthService } from "./auth.service.js";
 import { sendResponse } from "../../utils/response/AppResponse.js";
-import { setCookies } from "../../utils/auth/auth.helper.js";
+import { clearCookies, setCookies } from "../../utils/auth/auth.helper.js";
 import { AppError } from "../../utils/common/error/AppError.js";
 
 export class AuthController {
@@ -91,4 +91,40 @@ export class AuthController {
       },
     });
   });
+
+  logoutController = catchAsync(async (req: Request, res: Response) => {
+    const user = req.user;
+    if (!user) {
+      throw new AppError("User not found", 400);
+    }
+
+    await this.authService.logout(
+      user.userId as string,
+      user.sessionId as string,
+    );
+
+    clearCookies(res);
+
+    sendResponse(res, 200, {
+      success: true,
+      message: "User Logout Successfully",
+    });
+  });
+
+  logoutUserFromAllSessions = catchAsync(
+    async (req: Request, res: Response) => {
+      const user = req.user;
+      if (!user) {
+        throw new AppError("User not found", 400);
+      }
+
+      await this.authService.logoutUserFromAllSession(user.userId as string);
+        
+      clearCookies(res);
+      sendResponse(res, 200, {
+        success: true,
+        message: "User logged out of all devices",
+      });
+    },
+  );
 }

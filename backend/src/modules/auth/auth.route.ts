@@ -22,4 +22,8 @@ router.get("/me", authMiddleware, authController.loggedInUserController);
 
 router.post("/refresh-token", authController.refreshTokenController);
 
+router.post("/logout", authMiddleware, authController.logoutController);
+
+router.post("/logout-all", authMiddleware, authController.logoutUserFromAllSessions);
+
 export default router;

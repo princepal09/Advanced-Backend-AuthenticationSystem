@@ -13,5 +13,11 @@ export interface IAuthRepository {
   createSession(data: createSessionType): Promise<Session>;
   findSessionById(sessionId: string): Promise<Session | null>;
   revokeAllSessions(userId: string): Promise<void>;
-  updateSession(sessionId:string, data: updateSessionType): Promise<Session>;
-}
+  updateSession(sessionId: string, data: updateSessionType): Promise<Session>;
+  findSessionByUserIdAndSessionId(
+    userId: string,
+    sessionId: string,
+  ): Promise<Session | null>;
+  deleteSession(sessionId: string): Promise<void>;
+  deleteUserAllSessions(userId:string) : Promise<void>;
+} 

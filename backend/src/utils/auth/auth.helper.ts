@@ -23,7 +23,7 @@ export const setCookies = (res: Response, refreshToken: string) => {
     secure: env.NODE_ENV === "production", // if true it is only used for HTTPs
     sameSite: "lax",
     maxAge: refreshTokenMaxAge,
-    // path: "/api/v1/auth/refresh-token", // pass the refresh token path here
+    path: "/api/v1/auth/refresh-token", // pass the refresh token path here
   });
 };
 
@@ -32,6 +32,6 @@ export const clearCookies = (res: Response) => {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
     sameSite: "lax",
-    // path: "/api/v1/auth/refresh-token",
+    path: "/api/v1/auth/refresh-token",
   });
 };

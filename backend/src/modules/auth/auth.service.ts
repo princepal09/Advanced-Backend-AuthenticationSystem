@@ -110,7 +110,7 @@ export class AuthService {
 
   async refreshSession(refreshToken: string) {
     const payload = verifyRefreshToken(refreshToken);
-    console.log(payload)
+    console.log(payload);
 
     const session = await this.authRepo.findSessionById(payload.sessionId);
 
@@ -169,5 +169,25 @@ export class AuthService {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
     };
+  }
+
+  async logout(userId: string, sessionId: string) {
+    const session = await this.authRepo.findSessionByUserIdAndSessionId(
+      userId,
+      sessionId,
+    );
+
+    if (!session) {
+      throw new AppError(
+        "Session not found or you are not authorized to perform this action",
+        401,
+      );
+    }
+
+    await this.authRepo.deleteSession(session.id);
+  }
+
+  async logoutUserFromAllSession(userId: string) {
+    await this.authRepo.deleteUserAllSessions(userId);
   }
 }
