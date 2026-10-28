@@ -32,8 +32,8 @@ model Session {
   refreshTokenHash String
   userAgent        String?
   ipAddress        String?
-  isRevoked        Boolean @default(false)
-  isDeleted        Boolean @default(false)
+  isRevoked        Boolean   @default(false)
+  isDeleted        Boolean   @default(false)
   expiresAt        DateTime
   revokedAt        DateTime?
   createdAt        DateTime  @default(now())
@@ -51,7 +51,7 @@ model Role {
   createdAt       DateTime         @default(now())
   rolePermissions RolePermission[]
 }
-
+ 
 model Permission {
   id              String           @id @default(uuid())
   name            String           @unique
@@ -68,6 +68,8 @@ model UserRole {
   assignedAt DateTime @default(now())
 
   @@id([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
 }
 
 model RolePermission {
@@ -78,4 +80,6 @@ model RolePermission {
   assignedAt   DateTime   @default(now())
 
   @@id([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
 }

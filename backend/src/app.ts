@@ -6,12 +6,13 @@ import { env } from "./config/env.config.js";
 import { globalErrorHandler } from "./middlewares/error.middleware.js";
 import { AppError } from "./utils/common/error/AppError.js";
 import authRouter from "./modules/auth/auth.route.js";
+import adminRouter from "./modules/admin/admin.route.js";
 import { requestLogger } from "./middlewares/request-logger.middleware.js";
 export const app = express();
 
 // app.set("trust proxy", 1);
 app.use(helmet());
-app.use(requestLogger)
+app.use(requestLogger);
 app.use(
   cors({
     origin: env.FRONTEND_URL,
@@ -32,6 +33,7 @@ app.get("/health-check", (_req: Request, res: Response) => {
 });
 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/admin", adminRouter);
 
 app.use((req, _res, next) => {
   next(new AppError(`Cannot find ${req.originalUrl} on this server`, 404));
