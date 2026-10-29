@@ -1,5 +1,7 @@
 import { prisma } from "../src/lib/prisma.js";
 import { Permissions } from "../src/constants/permissions";
+import { env } from "../src/config/env.config.js";
+import { hashPassword } from "../src/utils/auth/password.js";
 
 async function main() {
   const permissions = [
@@ -58,7 +60,53 @@ async function main() {
     });
   }
 
-  console.log("Seed completed successfully...");
+  // create the initial admin
+
+  const existingAdmin = await prisma.user.findUnique({
+    where: {
+      email: env.ADMIN_EMAIL,
+    },
+  });
+
+  let adminUser;
+
+  if (!existingAdmin) {
+    const hashedPassword = await hashPassword(env.ADMIN_PASSWORD);
+
+    adminUser = await prisma.user.create({
+      data: {
+        email: env.ADMIN_EMAIL,
+        passwordHash: hashedPassword,
+      },
+    });
+    console.log("Admin user Created");
+  } else {
+    adminUser = existingAdmin;
+
+    console.log("Admin User already exists");
+  }
+
+  // assign admin role to user
+
+  await prisma.userRole.upsert({
+    where: {
+      userId_roleId: {
+        userId: adminUser.id,
+        roleId: adminRole.id,
+      },
+    },
+    update: {},
+
+    create: {
+      userId: adminUser.id,
+      roleId: adminRole.id,
+    },
+  });
+
+
+  console.log("Admin role assigned successfully")
+
+  console.log("Seed completed successfully")
 }
 
 main()
