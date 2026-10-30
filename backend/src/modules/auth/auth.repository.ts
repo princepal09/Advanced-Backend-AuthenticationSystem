@@ -6,6 +6,7 @@ import {
   createUserType,
   findUserByIdType,
   updateSessionType,
+  UserPermissionsType,
 } from "./auth.types.js";
 
 export class AuthRepository implements IAuthRepository {
@@ -122,5 +123,40 @@ export class AuthRepository implements IAuthRepository {
         isDeleted: true,
       },
     });
+  }
+
+  async getUserPermissions(userId: string): Promise<UserPermissionsType | null> {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        id: true,
+        email: true,
+        userRoles: {
+          select: {
+            role: {
+              select: {
+                id: true,
+                name: true,
+
+                rolePermissions: {
+                  select: {
+                    permission: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return user;
   }
 }

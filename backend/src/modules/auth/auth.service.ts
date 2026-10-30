@@ -14,6 +14,7 @@ import { IAuthRepository } from "./auth.interface.js";
 import { sanitizedUserResponse } from "./auth.response.js";
 import { env } from "../../config/env.config.js";
 import { userType } from "./auth.types.js";
+import { email } from "zod";
 
 export class AuthService {
   constructor(private authRepo: IAuthRepository) {}
@@ -189,5 +190,31 @@ export class AuthService {
 
   async logoutUserFromAllSession(userId: string) {
     await this.authRepo.deleteUserAllSessions(userId);
+  }
+
+  async getUserPermissions(userId: string) {
+    const user = await this.authRepo.getUserPermissions(userId);
+
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    const roles = user.userRoles.map((userRole) => userRole.role.name);
+    const permissions = user.userRoles.flatMap((userRole) =>
+      userRole.role.rolePermissions.map(
+        (rolePermission) => rolePermission.permission.name,
+      ),
+    );
+
+    const uniquePermissions = [...new Set(permissions)];
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+
+      roles,
+      permissions: uniquePermissions,
+    };
   }
 }

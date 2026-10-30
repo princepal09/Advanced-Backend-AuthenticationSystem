@@ -1,6 +1,11 @@
 import { User } from "../../../generated/prisma-client/client.js";
+import { AllRolesType, GetRoleByIdType } from "./admin.types.js";
 
 export interface IAdminRepository{
-    getAllUsers() : Promise<User[]>
+    getAllUsers() : Promise<User[] | null>
+
+    getAllRoles() : Promise<AllRolesType | null>
+
+    getRoleById(roleId:string) : Promise<GetRoleByIdType | null>
 
 }

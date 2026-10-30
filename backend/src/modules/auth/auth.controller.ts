@@ -119,11 +119,25 @@ export class AuthController {
       }
 
       await this.authService.logoutUserFromAllSession(user.userId as string);
-        
+
       clearCookies(res);
       sendResponse(res, 200, {
         success: true,
         message: "User logged out of all devices",
+      });
+    },
+  );
+
+  getUserPermissionsController = catchAsync(
+    async (req: Request, res: Response) => {
+      const user = req.user;
+
+      const results = await this.authService.getUserPermissions(user?.userId as string);
+
+      sendResponse(res, 200, {
+        success: true,
+        message: "User Permissions fetched Successfully",
+        data : results
       });
     },
   );

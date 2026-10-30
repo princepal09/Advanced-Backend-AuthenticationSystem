@@ -3,4 +3,4 @@ export enum Permissions{
     DELETE_POSTS = "delete_posts",
     VIEW_ANALYTICS = "view_anaytlics",
     MANAGE_ROLES = "manage_roles"
-}
+} 

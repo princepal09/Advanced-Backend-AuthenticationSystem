@@ -14,4 +14,25 @@ export class AdminController {
       data: result,
     });
   });
+
+  getAllRolesController = catchAsync(async (_req: Request, res: Response) => {
+    const result = await this.adminService.getAllRoles();
+
+    sendResponse(res, 200, {
+      success: true,
+      message: "All roles fetched successfully",
+      data: result,
+    });
+  });
+
+  getRoleByIdController = catchAsync(async (req: Request, res: Response) => {
+    const roleId = req.params.roleId as string;
+    const result = await this.adminService.getRoleById(roleId);
+
+    sendResponse(res, 200, {
+      success: true,
+      message: "Role fetched successfully",
+      data: result,
+    });
+  });
 }
