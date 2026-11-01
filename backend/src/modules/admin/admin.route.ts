@@ -30,4 +30,6 @@ router.get(
   adminController.getRoleByIdController,
 );
 
+router.post("/roles", authMiddleware, authorizePermissions(Permissions.MANAGE_ROLES), adminController.createRoleController)
+
 export default router;

@@ -1,5 +1,6 @@
 import { User } from "../../../generated/prisma-client/client.js";
 import { prisma } from "../../lib/prisma.js";
+import { AppError } from "../../utils/common/error/AppError.js";
 import { IAdminRepository } from "./admin.interface.js";
 import { AllRolesType, GetRoleByIdType } from "./admin.types.js";
 
@@ -78,5 +79,47 @@ export class AdminRepository implements IAdminRepository {
     });
 
     return role;
+  }
+
+  async createRoleWithPermissions(name: string, permissions: string[]): Promise<unknown> {
+    return prisma.$transaction(async(tx) => {
+      const existingRole = await tx.role.findUnique({
+        where : {
+          name
+        }
+      })
+
+      if(!existingRole){
+        throw new AppError("Role already exists", 400)
+      }
+
+      const dbPermissions = await tx.permission.findMany({
+        where : {
+          name : {
+            in : permissions
+          }
+        }
+      })
+      if(dbPermissions.length !== permissions.length){
+        throw new AppError("Invalid Permissions", 400)
+      }
+
+      const role = await tx.role.create({
+        data : {
+          name
+        }
+      })
+
+      await tx.rolePermission.createMany({
+        data: dbPermissions.map((permission) =>( {
+          roleId: role.id,
+          permissionId:permission.id
+
+        }))
+      })
+
+      return role;
+    })
+    
   }
 }

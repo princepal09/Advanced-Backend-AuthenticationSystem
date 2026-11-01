@@ -35,4 +35,14 @@ export class AdminController {
       data: result,
     });
   });
+
+  createRoleController = catchAsync(async (req: Request, res: Response) => {
+    const result = await this.adminService.createRole(req.body);
+
+    sendResponse(res, 200, {
+      success: true,
+      message: "Role created Successfully",
+      data: result,
+    });
+  });
 }

@@ -2,14 +2,15 @@ import { AppError } from "../../utils/common/error/AppError.js";
 import { toResponseDTO } from "./admin.dto.js";
 import { IAdminRepository } from "./admin.interface.js";
 import { sanitizedAdminResponse } from "./admin.response.js";
+import { CreateRoleInputDTO } from "./admin.schema.js";
 
 export class AdminService {
   constructor(private adminRepo: IAdminRepository) {}
 
   async getAllUsers() {
     const users = await this.adminRepo.getAllUsers();
-    if(!users){
-      throw new AppError("No users found", 404)
+    if (!users) {
+      throw new AppError("No users found", 404);
     }
     return users.map((user) => sanitizedAdminResponse(user));
   }
@@ -30,16 +31,35 @@ export class AdminService {
     return data;
   }
 
-  async getRoleById(roleId:string){
+  async getRoleById(roleId: string) {
     const role = await this.adminRepo.getRoleById(roleId);
 
-    if(!role){
-      throw new AppError("Role not found", 404)
+    if (!role) {
+      throw new AppError("Role not found", 404);
     }
 
     const responseDTO = toResponseDTO(role);
 
     return responseDTO;
+  }
 
+  async createRole(data: CreateRoleInputDTO) {
+    try {
+      const role = await this.adminRepo.createRoleWithPermissions(
+        data.name,
+        data.permissions,
+      );
+    } catch (error) {
+      if (error instanceof AppError) {
+        if (error.message === "Role already exists") {
+          throw new AppError("Role already exists", 409);
+        }
+
+        if (error.message === "Invalid Permissions") {
+          throw new AppError("Invalid Permissions", 400);
+        }
+      }
+      throw error;
+    }
   }
 }

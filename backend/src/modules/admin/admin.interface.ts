@@ -8,4 +8,7 @@ export interface IAdminRepository{
 
     getRoleById(roleId:string) : Promise<GetRoleByIdType | null>
 
+    createRoleWithPermissions(name:string, permissions:string[]):Promise<unknown>;
+    
+
 }
