@@ -45,4 +45,15 @@ export class AdminController {
       data: result,
     });
   });
+
+  updateRoleController = catchAsync(async (req: Request, res: Response) => {
+    const roleId = req.params.roleId as string;
+    const result = await this.adminService.updateRole(roleId, req.body);
+
+    sendResponse(res, 200, {
+      success: true,
+      message: "Role updated Successfully",
+      data: result,
+    });
+  });
 }

@@ -2,7 +2,7 @@ import { AppError } from "../../utils/common/error/AppError.js";
 import { toResponseDTO } from "./admin.dto.js";
 import { IAdminRepository } from "./admin.interface.js";
 import { sanitizedAdminResponse } from "./admin.response.js";
-import { CreateRoleInputDTO } from "./admin.schema.js";
+import { CreateRoleInputDTO, UpdateRoleInputDTO } from "./admin.schema.js";
 
 export class AdminService {
   constructor(private adminRepo: IAdminRepository) {}
@@ -61,5 +61,10 @@ export class AdminService {
       }
       throw error;
     }
+  }
+
+  async updateRole(roleId:string, data:UpdateRoleInputDTO){
+    const updatedRole = await this.adminRepo.updateRole(roleId, data);
+    
   }
 }

@@ -3,7 +3,7 @@ import { authMiddleware } from "../../middlewares/authentication.middleware.js";
 import { authorizePermissions } from "../../middlewares/authorization.middleware.js";
 import { Permissions } from "../../constants/permissions.js";
 import { adminController } from "./admin.container.js";
-import { getRoleByIdSchema } from "./admin.schema.js";
+import { getRoleByIdSchema, updateRoleSchema } from "./admin.schema.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 
 const router = express.Router();
@@ -31,5 +31,7 @@ router.get(
 );
 
 router.post("/roles", authMiddleware, authorizePermissions(Permissions.MANAGE_ROLES), adminController.createRoleController)
+
+router.patch("/roles/:roleId", authMiddleware, authorizePermissions(Permissions.MANAGE_ROLES), validate(updateRoleSchema), adminController.updateRoleController)
 
 export default router;
