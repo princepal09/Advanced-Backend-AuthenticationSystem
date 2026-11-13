@@ -56,4 +56,25 @@ export class AdminController {
       data: result,
     });
   });
+  
+  deleteRoleController = catchAsync(async (req: Request, res: Response) => {
+    const roleId = req.params.roleId as string;
+    await this.adminService.deleteRole(roleId);
+
+    sendResponse(res, 200, {
+      success: true,
+      message: "Role deleted Successfully",
+    });
+  });
+
+  assignRoleToUserController = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.params.userId as string;
+    await this.adminService.assignRoleToUser(userId, req.body);
+
+
+    sendResponse(res, 200, {
+      success: true,
+      message: "Role Assigned to the user successfully",
+    });
+  });
 }
