@@ -7,6 +7,7 @@ import { globalErrorHandler } from "./middlewares/error.middleware.js";
 import { AppError } from "./utils/common/error/AppError.js";
 import authRouter from "./modules/auth/auth.route.js";
 import adminRouter from "./modules/admin/admin.route.js";
+import oauthRouter from "./modules/auth/oauth/oauth.route.js";
 import { requestLogger } from "./middlewares/request-logger.middleware.js";
 export const app = express();
 
@@ -21,7 +22,7 @@ app.use(
 );
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieParser(env.REFRESH_TOKEN_SECRET));
 
 app.get("/health-check", (_req: Request, res: Response) => {
   return res.status(200).json({
@@ -34,9 +35,10 @@ app.get("/health-check", (_req: Request, res: Response) => {
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/oauth", oauthRouter);
 
 app.use((req, _res, next) => {
-  next(new AppError(`Cannot find ${req.originalUrl} on this server`, 404));
+  next(new AppError(`Cannot find ${req.path} on this server`, 404));
 });
 
 app.use(globalErrorHandler);

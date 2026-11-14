@@ -104,8 +104,8 @@ export class AdminRepository implements IAdminRepository {
         },
       });
 
-      if (!existingRole) {
-        throw new AppError("Role already exists", 400);
+      if (existingRole) {
+        throw new AppError("Role already exists", 409);
       }
 
       const dbPermissions = await tx.permission.findMany({
@@ -141,7 +141,6 @@ export class AdminRepository implements IAdminRepository {
       const existingRole = await tx.role.findUnique({
         where: {
           id: roleId,
-          isDeleted: false,
         },
         include: {
           userRoles: true,
@@ -156,17 +155,15 @@ export class AdminRepository implements IAdminRepository {
         throw new AppError("ROLE_ASSIGNED_TO_USER", 409);
       }
 
-      await tx.role.update({
+      const deleted = await tx.role.deleteMany({
         where: {
           id: roleId,
-        },
-        data: {
-          isDeleted: true,
-          deletedAt: new Date(),
+          userRoles: { none: {} },
         },
       });
-
-      return true;
+      if (deleted.count === 0) {
+        throw new AppError("ROLE_ASSIGNED_TO_USER", 409);
+      }
     });
   }
   async updateRole(roleId: string, data: UpdateRoleInputDTO) {
@@ -192,7 +189,7 @@ export class AdminRepository implements IAdminRepository {
           },
         });
 
-        if (!duplicateRole) {
+        if (duplicateRole) {
           throw new AppError("ROLE_ALREADY_EXISTS", 409);
         }
       }
@@ -258,7 +255,6 @@ export class AdminRepository implements IAdminRepository {
           id: {
             in: roleIds,
           },
-          isDeleted: false,
         },
       });
 
@@ -349,7 +345,7 @@ export class AdminRepository implements IAdminRepository {
         roleId
       },
       include: {
-        user: true
+        user: { omit: { passwordHash: true } }
       }
     });
     return users;

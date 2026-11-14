@@ -85,7 +85,7 @@ export class AuthController {
 
     sendResponse(res, 200, {
       success: true,
-      message: "Token Token Rotated Successfully",
+      message: "Refresh token rotated successfully",
       data: {
         accessToken: result.accessToken,
       },

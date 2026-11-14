@@ -1,10 +1,17 @@
-import type { Session, User } from "../../../generated/prisma-client/client.js";
+import type {
+  AuthProvider,
+  Session,
+  User,
+} from "../../../generated/prisma-client/client.js";
+import { Prisma } from "../../../generated/prisma-client/client.js";
 import { prisma } from "../../lib/prisma.js";
+import { AppError } from "../../utils/common/error/AppError.js";
 import { IAuthRepository } from "./auth.interface.js";
 import {
   createSessionType,
   createUserType,
   findUserByIdType,
+  AuthAccountWithUser,
   updateSessionType,
   UserPermissionsType,
 } from "./auth.types.js";
@@ -125,7 +132,9 @@ export class AuthRepository implements IAuthRepository {
     });
   }
 
-  async getUserPermissions(userId: string): Promise<UserPermissionsType | null> {
+  async getUserPermissions(
+    userId: string,
+  ): Promise<UserPermissionsType | null> {
     const user = await prisma.user.findUnique({
       where: {
         id: userId,
@@ -158,5 +167,55 @@ export class AuthRepository implements IAuthRepository {
     });
 
     return user;
+  }
+
+  async findAuthAccount(
+    provider: AuthProvider,
+    providerAccountId: string,
+  ): Promise<AuthAccountWithUser | null> {
+    return prisma.authAccount.findUnique({
+      where: {
+        provider_providerAccountId: {
+          provider,
+          providerAccountId,
+        },
+      },
+      include: {
+        user: true,
+      },
+    });
+  }
+
+  async createGoogleUser(
+    email: string,
+    providerAccountId: string,
+  ): Promise<User> {
+    try {
+      return await prisma.user.create({
+        data: {
+          email,
+          provider: "GOOGLE",
+          isEmailVerified: true,
+          authAccounts: { create: { provider: "GOOGLE", providerAccountId } },
+        },
+      });
+    } catch (error) {
+      if (
+        !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+        error.code !== "P2002"
+      ) {
+        throw error;
+      }
+
+      const account = await this.findAuthAccount("GOOGLE", providerAccountId);
+      if (account) {
+        return account.user;
+      }
+
+      throw new AppError(
+        "An account already exists for this email. Use its original sign-in method.",
+        409,
+      );
+    }
   }
 }

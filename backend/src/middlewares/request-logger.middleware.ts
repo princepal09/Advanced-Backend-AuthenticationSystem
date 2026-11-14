@@ -13,7 +13,7 @@ export const requestLogger = (
 
     logger.info({
       method: req.method,
-      url: req.originalUrl,
+      url: req.originalUrl.split("?")[0],
       statusCode: res.statusCode,
       duration: `${duration}ms`,
       ip: req.ip,

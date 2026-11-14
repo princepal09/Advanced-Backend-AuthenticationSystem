@@ -50,7 +50,7 @@ export class AdminService {
 
   async createRole(data: CreateRoleInputDTO) {
     try {
-      const role = await this.adminRepo.createRoleWithPermissions(
+      return await this.adminRepo.createRoleWithPermissions(
         data.name,
         data.permissions,
       );
@@ -90,12 +90,8 @@ export class AdminService {
   async assignRoleToUser(userId: string, data: AssignRoleInputDTO) {
     const roles = await this.adminRepo.getRolesById(data.roleIds);
 
-    const immutableRoles = roles.filter((role) => {
-      IMMUTABLE_ROLES.includes(role.name as any);
-    });
-
-    if (immutableRoles.length > 0) {
-      throw new AppError("Immutable roles cannot be assignes", 403);
+    if (roles.some((role) => IMMUTABLE_ROLES.some((name) => name === role.name))) {
+      throw new AppError("Immutable roles cannot be assigned", 403);
     }
 
     await this.adminRepo.assignRoleToUser(userId, data.roleIds);

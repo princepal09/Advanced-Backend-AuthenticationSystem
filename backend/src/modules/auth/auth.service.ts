@@ -14,7 +14,8 @@ import { IAuthRepository } from "./auth.interface.js";
 import { sanitizedUserResponse } from "./auth.response.js";
 import { env } from "../../config/env.config.js";
 import { userType } from "./auth.types.js";
-import { email } from "zod";
+import type { User } from "../../../generated/prisma-client/client.js";
+import jwt from "jsonwebtoken";
 
 export class AuthService {
   constructor(private authRepo: IAuthRepository) {}
@@ -33,19 +34,12 @@ export class AuthService {
 
     const hashedPassword = await hashPassword(data.password);
 
-    const createdUser = await this.authRepo.createUser({
+    const user = await this.authRepo.createUser({
       email: data.email,
       hashedPassword,
     });
 
-    const result = await this.loginUser({
-      email: data.email,
-      password: data.password,
-      userAgent: data.userAgent,
-      ipAddress: data.ipAddress,
-    });
-
-    return result;
+    return this.createUserSession(user, data);
   }
 
   async loginUser(data: {
@@ -67,14 +61,21 @@ export class AuthService {
       throw new AppError("Invalid Credentials", 401);
     }
 
+    return this.createUserSession(existingUser, data);
+  }
+
+  async createUserSession(
+    user: User,
+    { userAgent, ipAddress }: { userAgent: string; ipAddress: string },
+  ) {
     const sessionId = generateSessionId();
 
     const accessToken = signAccessToken({
-      sub: existingUser.id,
+      sub: user.id,
       sessionId,
     });
     const refreshToken = signRefreshToken({
-      sub: existingUser.id,
+      sub: user.id,
       sessionId,
     });
 
@@ -84,17 +85,17 @@ export class AuthService {
       Date.now() + ms(env.REFRESH_TOKEN_EXPIRES_IN as ms.StringValue),
     );
 
-    const newSession = await this.authRepo.createSession({
+    await this.authRepo.createSession({
       id: sessionId,
-      userId: existingUser.id,
+      userId: user.id,
       refreshTokenHash: hashedRefreshToken,
-      userAgent: data.userAgent,
-      ipAddress: data.ipAddress,
+      userAgent,
+      ipAddress,
       expiresAt,
     });
 
     return {
-      user: sanitizedUserResponse(existingUser),
+      user: sanitizedUserResponse(user),
       accessToken,
       refreshToken,
     };
@@ -110,12 +111,19 @@ export class AuthService {
   }
 
   async refreshSession(refreshToken: string) {
-    const payload = verifyRefreshToken(refreshToken);
-    console.log(payload);
+    let payload;
+    try {
+      payload = verifyRefreshToken(refreshToken);
+    } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+        throw new AppError("Invalid or expired refresh token", 401);
+      }
+      throw error;
+    }
 
     const session = await this.authRepo.findSessionById(payload.sessionId);
 
-    if (!session) {
+    if (!session || session.userId !== payload.sub || session.isDeleted) {
       throw new AppError("Session not found", 401);
     }
 
@@ -161,7 +169,7 @@ export class AuthService {
       Date.now() + newRefreshTokenExpiresIn,
     );
 
-    const updatedSession = await this.authRepo.updateSession(session.id, {
+    await this.authRepo.updateSession(session.id, {
       hashedNewRefreshToken,
       newRefreshTokenExpiresAt,
     });

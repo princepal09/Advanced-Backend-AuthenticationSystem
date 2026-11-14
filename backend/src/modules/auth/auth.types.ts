@@ -1,4 +1,4 @@
-import { Prisma } from "../../../generated/prisma-client/client.js";
+import type { Prisma } from "../../../generated/prisma-client/client.js";
 
 export type createUserType = {
   email: string;
@@ -63,4 +63,8 @@ export type UserPermissionsType = Prisma.UserGetPayload<{
       };
     };
   };
+}>;
+
+export type AuthAccountWithUser = Prisma.AuthAccountGetPayload<{
+  include: { user: true };
 }>;
