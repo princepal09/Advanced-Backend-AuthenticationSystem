@@ -56,7 +56,7 @@ export class AdminController {
       data: result,
     });
   });
-  
+
   deleteRoleController = catchAsync(async (req: Request, res: Response) => {
     const roleId = req.params.roleId as string;
     await this.adminService.deleteRole(roleId);
@@ -67,14 +67,54 @@ export class AdminController {
     });
   });
 
-  assignRoleToUserController = catchAsync(async (req: Request, res: Response) => {
-    const userId = req.params.userId as string;
-    await this.adminService.assignRoleToUser(userId, req.body);
+  assignRoleToUserController = catchAsync(
+    async (req: Request, res: Response) => {
+      const userId = req.params.userId as string;
+      await this.adminService.assignRoleToUser(userId, req.body);
 
+      sendResponse(res, 200, {
+        success: true,
+        message: "Role Assigned to the user successfully",
+      });
+    },
+  );
 
-    sendResponse(res, 200, {
-      success: true,
-      message: "Role Assigned to the user successfully",
-    });
-  });
+  removeRoleFromUserController = catchAsync(
+    async (req: Request, res: Response) => {
+      const userId = req.params.userId as string;
+      const roleId = req.params.roleId as string;
+      await this.adminService.removeRoleFromUser(userId, roleId);
+
+      sendResponse(res, 200, {
+        success: true,
+        message: "Role removed successfully",
+      });
+    },
+  );
+
+  getAllUserOfRoleController = catchAsync(
+    async (req: Request, res: Response) => {
+      const roleId = req.params.roleId as string;
+      const result = await this.adminService.getAllUsersByRoleId(roleId);
+
+      sendResponse(res, 200, {
+        success: true,
+        message: "Users fetched successfully",
+        data: result,
+      });
+    },
+  );
+
+  getUserPermissionsController = catchAsync(
+    async (req: Request, res: Response) => {
+     const userId = req.params.userId as string
+     const result = await this.adminService.getUserPermissions(userId);
+
+      sendResponse(res, 200, {
+        success: true,
+        message: "Users Permissions fetched successfully",
+        data: result,
+      });
+    },
+  );
 }

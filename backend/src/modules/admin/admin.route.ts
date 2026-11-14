@@ -6,7 +6,10 @@ import { adminController } from "./admin.container.js";
 import {
   assignRoleParamsSchema,
   assignRoleSchema,
+  getAllUserOfRoleSchema,
   getRoleByIdSchema,
+  getUserPermissionsSchema,
+  removeUserRoleParamsSchema,
   updateRoleSchema,
 } from "./admin.schema.js";
 import { validate } from "../../middlewares/validate.middleware.js";
@@ -57,5 +60,29 @@ router.post(
   validate(assignRoleParamsSchema, "params"),
   validate(assignRoleSchema, "body"),
   adminController.assignRoleToUserController,
+);
+
+router.delete(
+  "/users/:userId/roles/:roleId",
+  authMiddleware,
+  authorizePermissions(Permissions.MANAGE_ROLES),
+  validate(removeUserRoleParamsSchema, "params"),
+  adminController.removeRoleFromUserController
+);
+
+router.get(
+  "/users/roles/:roleId",
+  authMiddleware,
+  authorizePermissions(Permissions.MANAGE_ROLES),
+  validate(getAllUserOfRoleSchema, "params"),
+  adminController.getAllUserOfRoleController
+);
+
+router.get(
+  "/users/:userId/permissions",
+  authMiddleware,
+  authorizePermissions(Permissions.MANAGE_ROLES),
+  validate(getUserPermissionsSchema, "params"),
+  adminController.getUserPermissionsController
 );
 export default router;
